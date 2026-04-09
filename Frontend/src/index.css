@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: "Trebuchet MS", "Courier New", system-ui;
+  background-color: #0f1115;
+  color: #e6e6e6;
+}
+
+body {
+  margin: 0;
+  background-color: #0f1115;
+}
+
+a {
+  color: #8ab4f8;
+}
+
+.silly-shadow {
+  box-shadow: 2px 3px 0px rgba(0, 0, 0, 0.25);
+}
+
+input,
+textarea,
+select {
+  background-color: #111827;
+  border-color: #2b3440;
+  color: #e6e6e6;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+}
+
+button {
+  transition:
+    transform 140ms ease,
+    box-shadow 140ms ease,
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35) inset;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
