@@ -23,50 +23,51 @@ const extractJsonText = (text: string): string => {
   return trimmed;
 };
 
-const callGeminiJson = async (
+const callGroqJson = async (
   systemPrompt: string,
   userPrompt: string
 ): Promise<JsonMap> => {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY missing");
+    throw new Error("GROQ_API_KEY missing");
   }
 
-  const model = process.env.GEMINI_MODEL || "gemini-3-flash-preview";
-  const url = `${GEMINI_URL}/${encodeURIComponent(model)}:generateContent?key=${apiKey}`;
+  const model = process.env.GROQ_MODEL || "llama-3.1-8b-instant";
+  const url = "https://api.groq.com/openai/v1/chat/completions";
 
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      systemInstruction: {
-        parts: [{ text: systemPrompt }]
-      },
-      contents: [
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt
+        },
         {
           role: "user",
-          parts: [{ text: userPrompt }]
+          content: userPrompt
         }
       ],
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.2
-      }
+      model: model,
+      response_format: { type: "json_object" },
+      temperature: 0.2
     })
   });
 
   if (!res.ok) {
     const text = await res.text();
-    throw new Error(`Gemini error: ${text}`);
+    throw new Error(`Groq error: ${text}`);
   }
 
   const data = (await res.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    choices?: { message?: { content?: string } }[];
   };
 
-  const content = data.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
+  const content = data.choices?.[0]?.message?.content || "{}";
   const jsonText = extractJsonText(content);
   return JSON.parse(jsonText) as JsonMap;
 };
@@ -77,7 +78,7 @@ export const parseJobDescription = async (
   const systemPrompt =
     "Extract JSON with keys: company, role, requiredSkills (array), niceToHaveSkills (array), seniority, location. Return only JSON.";
 
-  const json = await callGeminiJson(systemPrompt, jobDescription);
+    const json = await callGroqJson(systemPrompt, jobDescription);
 
   // not sure if this is best way but it works
   return {
@@ -103,7 +104,7 @@ export const generateResumeSuggestions = async (
     "Return JSON with key suggestions (array of 3-5 resume bullet points). Be specific to the job. No extra text.";
 
   const userPrompt = `Role: ${roleHint}\nCompany: ${companyHint}\n\n${jobDescription}`;
-  const json = await callGeminiJson(systemPrompt, userPrompt);
+    const json = await callGroqJson(systemPrompt, userPrompt);
 
   if (Array.isArray(json.suggestions)) {
     return json.suggestions.map(String);
